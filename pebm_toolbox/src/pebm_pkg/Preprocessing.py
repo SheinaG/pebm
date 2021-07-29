@@ -32,9 +32,11 @@ class Preprocessing:
 
         """
         The notch function applies a notch filter in order to remove the power line artifacts.
+        
         :param notch_freq: The frequency of the power line in the country where the signal was captured,
-        usually the frequency is 50Hz (EUR) or 60Hz (US).
-        :return: the filtered ECG signal
+         usually the frequency is 50Hz (EUR) or 60Hz (US).
+
+        :returns fsig: the filtered ECG signal
         """
 
         signal = self.signal
@@ -53,7 +55,8 @@ class Preprocessing:
         """
         The bpfilt function applies a bandpass filter between [0.67, 100] Hz,
         this function uses a zero-phase Butterwarth filter with 75 coefficients.
-        :return:
+        
+        :returns fsig: the filtered ECG signal
         """
         signal = self.signal
         fs = self.fs

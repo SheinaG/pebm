@@ -1,0 +1,177 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>src.pebm_pkg.FiducialPoints &#8212; PEBM Toolbox &#34; documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for src.pebm_pkg.FiducialPoints</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">src.pebm_pkg.Preprocessing</span>  <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">import</span> <span class="nn">platform</span>
+<span class="kn">import</span> <span class="nn">scipy.io</span> <span class="k">as</span> <span class="nn">spio</span>
+
+<div class="viewcode-block" id="FiducialPoints"><a class="viewcode-back" href="../../../src.pebm_pkg.html#src.pebm_pkg.FiducialPoints.FiducialPoints">[docs]</a><span class="k">class</span> <span class="nc">FiducialPoints</span><span class="p">:</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">signal</span><span class="p">,</span> <span class="n">fs</span><span class="p">,</span> <span class="n">peaks</span><span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The purpose of the FiducialPoints class is to calculate the fiducial pointes of the ECG signal.</span>
+<span class="sd">        :param signal: The ECG signal as a ndarray.</span>
+<span class="sd">        :param fs: The frequency of the signal.</span>
+<span class="sd">        :param peaks: The indexes of the R- points of the ECG signal – optional input</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">signal</span> <span class="o">=</span> <span class="n">signal</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fs</span> <span class="o">=</span> <span class="n">fs</span>
+        <span class="k">if</span> <span class="n">peaks</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">pre</span> <span class="o">=</span> <span class="n">Preprocessing</span><span class="p">(</span><span class="n">signal</span><span class="p">,</span> <span class="n">fs</span><span class="p">)</span>
+            <span class="n">peaks</span> <span class="o">=</span> <span class="n">pre</span><span class="o">.</span><span class="n">epltd</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">peaks</span> <span class="o">=</span> <span class="n">peaks</span>
+
+<div class="viewcode-block" id="FiducialPoints.wavedet"><a class="viewcode-back" href="../../../src.pebm_pkg.html#src.pebm_pkg.FiducialPoints.FiducialPoints.wavedet">[docs]</a>    <span class="k">def</span> <span class="nf">wavedet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">matlab_pat</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The wavedat function uses the matlab algorithm wavedet, compiled for python.</span>
+<span class="sd">        The algorithm is described in the following paper:</span>
+<span class="sd">        Martinze at el (2004),</span>
+<span class="sd">        A wavelet-based ECG delineator: evaluation on standard databases.</span>
+<span class="sd">        IEEE Transactions on Biomedical Engineering, 51(4), 570-581.</span>
+
+<span class="sd">        :param matlab_pat: Optional input- requiered when runing on a linux machine.</span>
+<span class="sd">        </span>
+<span class="sd">        :returns: Dictionary that includes indexes for each fiducial point</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">signal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">signal</span>
+        <span class="n">fs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fs</span>
+        <span class="n">peaks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">peaks</span>
+        <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+
+        <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tmpdirname</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">tmpdirname</span><span class="p">)</span>
+             <span class="c1"># take it from const</span>
+            <span class="n">ecg_kit</span> <span class="o">=</span> <span class="s1">&#39;/home/sheina/pebm_toolbox/src/pebm_pkg/wavedet_exe/ecg-kit-master&#39;</span>
+            <span class="c1">#matlab_pat = &#39;/usr/local/MATLAB/MATLAB_Runtime&#39;</span>
+
+            <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="s2">&quot;peaks.txt&quot;</span><span class="p">,</span> <span class="n">peaks</span><span class="p">)</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="s2">&quot;signal.txt&quot;</span><span class="p">,</span> <span class="n">signal</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;Linux&#39;</span><span class="p">:</span>
+                <span class="n">set_command</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;export MATLAB_RUNTIME=&#39;</span><span class="p">,</span> <span class="n">matlab_pat</span><span class="p">])</span>
+                <span class="n">wavedet_dir</span> <span class="o">=</span> <span class="s1">&#39;/home/sheina/pebm_toolbox/src/pebm_pkg/wavedet_exe/run_peak_det.sh&#39;</span>
+                <span class="n">command</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">wavedet_dir</span><span class="p">,</span> <span class="n">ecg_kit</span><span class="p">,</span> <span class="s1">&#39;&quot;signal.txt&quot; &quot;peaks.txt&quot; &quot;200&quot; &#39;</span><span class="p">]</span> <span class="p">)</span>
+                <span class="n">all_command</span> <span class="o">=</span><span class="s1">&#39;;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">set_command</span><span class="p">,</span> <span class="n">command</span><span class="p">])</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">all_command</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;Windows&#39;</span><span class="p">:</span>
+                <span class="n">wavedet_dir</span> <span class="o">=</span> <span class="s1">&#39;/home/sheina/pebm_toolbox/src/pebm_pkg/wavedet_exe/peak_det.exe&#39;</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">&#39;wavedet_dir &quot;signal.txt&quot; &quot;peaks.txt&quot; &quot;200&quot;&#39;</span><span class="p">)</span>
+            <span class="n">fiducials_mat</span> <span class="o">=</span> <span class="n">spio</span><span class="o">.</span><span class="n">loadmat</span><span class="p">(</span><span class="s1">&#39;output.mat&#39;</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">cwd</span><span class="p">)</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Pon&quot;</span><span class="p">,</span> <span class="s2">&quot;P&quot;</span><span class="p">,</span> <span class="s2">&quot;Poff&quot;</span><span class="p">,</span> <span class="s2">&quot;QRSon&quot;</span><span class="p">,</span> <span class="s2">&quot;Q&quot;</span><span class="p">,</span> <span class="s2">&quot;qrs&quot;</span><span class="p">,</span> <span class="s2">&quot;S&quot;</span><span class="p">,</span> <span class="s2">&quot;QRSoff&quot;</span><span class="p">,</span> <span class="s2">&quot;Ton&quot;</span><span class="p">,</span> <span class="s2">&quot;T&quot;</span><span class="p">,</span> <span class="s2">&quot;Toff&quot;</span><span class="p">,</span> <span class="s2">&quot;Ttipo&quot;</span><span class="p">,</span> <span class="s2">&quot;Ttipoon&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Ttipooff&quot;</span><span class="p">]</span>
+        <span class="n">position</span> <span class="o">=</span> <span class="n">fiducials_mat</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">all_keys</span> <span class="o">=</span> <span class="n">fiducials_mat</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">names</span>
+        <span class="n">position_values</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">position_keys</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">all_keys</span><span class="p">):</span>
+            <span class="n">ret_val</span> <span class="o">=</span> <span class="n">position</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">keys</span><span class="o">.</span><span class="fm">__contains__</span><span class="p">(</span><span class="n">key</span><span class="p">)):</span>
+                <span class="n">ret_val</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">ret_val</span><span class="p">)]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+                <span class="n">ret_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ret_val</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+                <span class="n">position_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ret_val</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">))</span>
+                <span class="n">position_keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="c1"># -----------------------------------</span>
+
+        <span class="n">fiducials</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">position_keys</span><span class="p">,</span> <span class="n">position_values</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">fiducials</span></div></div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<h1 class="logo"><a href="../../../index.html">PEBM Toolbox</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2021, Sheina G.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

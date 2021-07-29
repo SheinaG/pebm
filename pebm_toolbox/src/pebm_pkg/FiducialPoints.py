@@ -1,4 +1,4 @@
-from pebm_pkg.Preprocessing  import *
+from src.pebm_pkg.Preprocessing  import *
 import tempfile
 import platform
 import scipy.io as spio
@@ -8,9 +8,9 @@ class FiducialPoints:
     def __init__(self, signal, fs, peaks= None):
         """
         The purpose of the FiducialPoints class is to calculate the fiducial pointes of the ECG signal.
-        :param signal: the ECG signal as a ndarray.
-        :param fs: the frequency of the signal.
-        :param peaks:the indexes of the R- points of the ECG signal – optional input
+        :param signal: The ECG signal as a ndarray.
+        :param fs: The frequency of the signal.
+        :param peaks: The indexes of the R- points of the ECG signal – optional input
         """
         self.signal = signal
         self.fs = fs
@@ -27,8 +27,9 @@ class FiducialPoints:
         A wavelet-based ECG delineator: evaluation on standard databases.
         IEEE Transactions on Biomedical Engineering, 51(4), 570-581.
 
-        :param matlab_pat: optional input- needed to use a linux machine
-        :return: dictionary that includes indexes for each fiducial point
+        :param matlab_pat: Optional input- requiered when runing on a linux machine.
+        
+        :returns: Dictionary that includes indexes for each fiducial point
         """
 
         signal = self.signal
