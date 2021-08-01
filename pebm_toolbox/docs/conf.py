@@ -33,12 +33,15 @@ release = '"'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 autoclass_content = "both"
+import sphinx_rtd_theme
+
 
 
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.viewcode',
     'sphinx.ext.todo',
+    'phinx_rtd_theme',
 ]
 autodoc_mock_imports = ['wfdb', 'mne']
 source_suffix = ['.rst', '.md']
@@ -57,7 +60,9 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+
+
+html_theme = "sphinx_rtd_theme"
 html_logo = "logo.png"
 
 
