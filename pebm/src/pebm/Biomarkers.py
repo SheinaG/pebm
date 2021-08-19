@@ -2,6 +2,7 @@ from src.pebm.FiducialPoints import FiducialPoints
 from src.pebm.IntervalsDuration import extract_intervals_duration
 from src.pebm.WavesCharacteristics import extract_waves_characteristics
 from src.pebm.Statistics import statistics
+from src._ErrorHandler import _check_shape_, WrongParameter
 
 
 class Biomarkers:
@@ -12,6 +13,10 @@ class Biomarkers:
         :param fs: The frequency of the signal.
         :param fiducials: Dictionary that includes indexes for each fiducial point
         """
+        if fs <= 0:
+            raise WrongParameter("Sampling frequency should be strictly positive")
+        _check_shape_(signal)
+
         self.signal = signal
         self.fs = fs
         self.fiducials = fiducials

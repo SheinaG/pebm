@@ -6,7 +6,7 @@ import wfdb
 from wfdb import processing
 from src.pebm.c_files.EpltdAll import epltd_all
 from src.pebm.wavedet_exe.Wavdet import wavdet
-
+from src._ErrorHandler import _check_shape_, WrongParameter
 
 class FiducialPoints:
 
@@ -17,6 +17,10 @@ class FiducialPoints:
         :param fs: The sampling frequency" of the signal.
         :param peaks: The indexes of the R- points of the ECG signal – optional input
         """
+        if fs <= 0:
+            raise WrongParameter("Sampling frequency should be strictly positive")
+        _check_shape_(signal)
+
         self.signal = signal
         self.fs = fs
         if peaks is None:

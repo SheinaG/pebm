@@ -4,8 +4,7 @@ import mne
 from scipy.signal import butter, sosfiltfilt
 from scipy.spatial import cKDTree
 from src.pebm.FiducialPoints import FiducialPoints
-
-
+from src._ErrorHandler import _check_shape_, WrongParameter
 
 
 class Preprocessing:
@@ -19,6 +18,10 @@ class Preprocessing:
         :param signal: the ECG signal as a ndarray.
         :param fs: The sampling frequency of the signal.
         """
+        if fs <= 0:
+            raise WrongParameter("Sampling frequency should be strictly positive")
+        _check_shape_(signal)
+
         self.signal = signal
         self.fs = fs
         self.n_freq = None #can be 60 or 50 HZ
@@ -35,7 +38,8 @@ class Preprocessing:
 
         :return:  the filtered ECG signal
         """
-
+        if n_freq <= 0:
+            raise WrongParameter("center frequency of the power line should be strictly positive")
         signal = self.signal
         fs = self.fs
         self.n_freq = n_freq
