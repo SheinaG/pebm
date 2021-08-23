@@ -9,7 +9,7 @@ setuptools.setup(
     author="Example Author",
     author_email="sheina@campus.technion.ac.il",
     description="A small example package",
-    long_description=long_description,
+    long_description="aa",
     long_description_content_type="text/markdown",
     url="https://github.com/pypa/sampleproject",
     project_urls={
