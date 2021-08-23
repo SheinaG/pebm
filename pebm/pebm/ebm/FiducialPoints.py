@@ -4,9 +4,9 @@ import tempfile
 import os
 import wfdb
 from wfdb import processing
-from src.pebm.c_files.EpltdAll import epltd_all
-from src.pebm.wavedet_exe.Wavdet import wavdet
-from src._ErrorHandler import _check_shape_, WrongParameter
+from pebm.ebm.c_files.EpltdAll import epltd_all
+from pebm.ebm.wavedet_exe.Wavdet import wavdet
+from pebm._ErrorHandler import _check_shape_, WrongParameter
 
 class FiducialPoints:
 
